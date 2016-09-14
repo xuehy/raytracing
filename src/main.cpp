@@ -6,6 +6,6 @@ int main()
 			 new Sphere<float>({5, 0, -15},      2    ),
 			 new Sphere<float>({-5, 0, -15},     2    ),
 			 new Sphere<float>({-2, -1, -10},    1    ) };
-  render(scene, screen);
+  render(scene);
   return 0;
 }

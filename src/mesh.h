@@ -2,7 +2,7 @@
 #include <list>
 #include <limits>
 #include <opencv2/opencv.hpp>
-
+#include <algorithm>
 template <typename T>
 class Sphere
 {
@@ -64,25 +64,36 @@ void render(const Scene<T>& scene)
   Vec3<T> eye(0);
   T h = tan(fov / 360 * 2 * pi / 2) * 2;
   T w = h * width / height;
-  cv::Mat img = cv::Mat(h, w, CV_8UC3);
-  for(int y = 0; y < h; ++y)
-    for(int x = 0; x < w; ++x)
+  cv::Mat img = cv::Mat::zeros(height, width, CV_8UC3);
+  uchar *image = reinterpret_cast<uchar*>(img.data);
+
+  for(int y = 0; y < height; ++y)
+    for(int x = 0; x < width; ++x)
       {
 	Vec3<T> direction((T(x) - width/2) / width * w,
 			  (T(height)/2 - y) / height * h,
 			  -1.0f);
 	direction.normalize();
+
 	auto pixel = trace(Ray<T>(eye, direction), scene);
+
 	uchar r,g,b;
 	r = pixel.getX() * 255 + 0.5;
 	g = pixel.getY() * 255 + 0.5;
 	b = pixel.getZ() * 255 + 0.5;
-	r = min(r,255);
-	g = min(g,255);
-	b = min(b,255);
-	img.at<cv::Vec3b>(y,x) = cv::Vec3b(b,g,r);
+
+	r = std::min(r,(uchar)255);
+	g = std::min(g,(uchar)255);
+	b = std::min(b,(uchar)255);
+	int index = 3 * (y * width + x);
+
+	image[index] = b;
+	image[index + 1] = g;
+	image[index + 2] = r;
+
+	
       }
-  imshow("ds", img);
-  waitKey(0);
+  cv::imshow("Rendered Scene", img);
+  cv::waitKey(0);
 }
 

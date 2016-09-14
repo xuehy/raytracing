@@ -1,5 +1,5 @@
 #include <iostream>
-
+#include <cmath>
 template <typename T>
 class Vec3
 {
@@ -10,9 +10,9 @@ public:
   Vec3(const T& a) : x(a), y(a), z(a) {}
   Vec3(const T &a, const T &b, const T &c) : x(a), y(b), z(c) {}
   Vec3<T> operator+(const Vec3<T>& v);
-  Vec3<T> operator-(const Vec3<T>& v);
+  Vec3<T> operator-(const Vec3<T>& v) const;
   T operator*(const Vec3<T>& v);
-  void normalized();
+  void normalize();
   void show();
   T getX() {return x;}
   T getY() {return y;}
@@ -20,7 +20,7 @@ public:
 };
 
 template <typename T>
-void Vec3<T>::normalized()
+void Vec3<T>::normalize()
 {
   T a = sqrt(x*x+y*y+z*z);
   x /= a;
@@ -35,9 +35,9 @@ Vec3<T> Vec3<T>::operator+(const Vec3<T>& v)
 }
 
 template <typename T>
-Vec3<T> Vec3<T>::operator-(const Vec3<T>& v)
+Vec3<T> Vec3<T>::operator-(const Vec3<T>& v) const
 {
-  return Vec3<T>(x - v.x, y - v.y, z - v.z);
+  return Vec3<T>(this->x - v.x, this->y - v.y, this->z - v.z);
 }
 
 template <typename T>
