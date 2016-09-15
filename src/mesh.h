@@ -1,4 +1,5 @@
 #include "ray.h"
+#include "light.hpp"
 #include <list>
 #include <limits>
 #include <opencv2/opencv.hpp>
@@ -30,13 +31,21 @@ public:
       }
     return true;
   }
+  Vec3<T> color() const {return m_color;}
 protected:
   Vec3<T> m_center;
   T m_radius;
+  Vec3<T> m_color;
 };
 
 template <typename T>
-using Scene = std::list<Sphere<T>*> ;
+struct Scene
+{
+  std::list<Sphere<T>*> objects;
+  std::list<Light<T>*> lights;
+};
+
+
 
 template <typename T>
 Vec3<T> trace(const Ray<T>& ray, const Scene<T>& scene)
@@ -55,7 +64,8 @@ Vec3<T> trace(const Ray<T>& ray, const Scene<T>& scene)
 	    }
 	}
     }
-  return Vec3<T>(obj ? 1 : 0);
+  return Vec3<T>(10.0/nearest);
+    //  return Vec3<T>(obj ? 1 : 0);
 }
 
 template <typename T>
