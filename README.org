@@ -2,7 +2,7 @@
 * Raytracing
 *A very simple ray tracing demo*
 
-
+[[./raytracing/resource/rendered.gif]]
 * Features
 
 - Lambertian diffusion
