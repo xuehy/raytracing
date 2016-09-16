@@ -35,6 +35,11 @@ public:
   Vec3<T> color() const {return m_color;}
   T reflection_ratio() const {return m_reflection;}
   T transparency() const {return m_transparency;}
+  void move(Vec3<T>& m)
+  {
+    m_center += m;
+  }
+  
 protected:
   Vec3<T> m_center;
   T m_radius;
@@ -123,7 +128,7 @@ Vec3<T> trace(const Ray<T>& ray, const Scene<T>& scene, int depth)
 }
 
 template <typename T>
-void render(const Scene<T>& scene)
+cv::Mat render(const Scene<T>& scene)
 {
   Vec3<T> eye(0);
   T h = tan(fov / 360 * 2 * pi / 2) * 2;
@@ -157,7 +162,8 @@ void render(const Scene<T>& scene)
 
 	
       }
-  cv::imshow("Rendered Scene", img);
-  cv::waitKey(0);
+  //  cv::imshow("Rendered Scene", img);
+  //  cv::waitKey();
+  return img;
 }
 

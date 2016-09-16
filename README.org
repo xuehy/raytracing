@@ -1,0 +1,11 @@
+#+OPTION: ^:nil
+* Raytracing
+*A very simple ray tracing demo*
+
+
+* Features
+
+- Lambertian diffusion
+- Reflection
+- Retraction
+- Sphere model
