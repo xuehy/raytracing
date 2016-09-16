@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8)
 
 set(CMAKE_BUILD_TYPE Release)
 set(DCMAKE_BUILD_TYPE Release)
-set(CMAKE_CXX_FLAGS "-std=c++17")
+set(CMAKE_CXX_FLAGS "-std=c++11")
 project(raytracing)
 find_package(OpenCV REQUIRED)
 include_directories(${OpenCV_INCLUDE_DIRS})
