@@ -8,7 +8,7 @@ template <typename T>
 class Sphere
 {
 public:
-  Sphere(const Vec3<T> &c, const T &r) : m_center(c), m_radius(r)
+  Sphere(const Vec3<T> &c, const T &r, const Vec3<T> &clr) : m_center(c), m_radius(r), m_color(clr)
   {}
   Vec3<T> normal(const Vec3<T>& pos) const
   {
@@ -52,7 +52,7 @@ Vec3<T> trace(const Ray<T>& ray, const Scene<T>& scene)
 {
   T nearest = std::numeric_limits<T>::max();
   const Sphere<T>* obj = NULL;
-  for(auto& o : scene)
+  for(auto& o : scene.objects)
     {
       T distance = std::numeric_limits<T>::max();
       if(o->intersect(ray, &distance))
@@ -64,7 +64,22 @@ Vec3<T> trace(const Ray<T>& ray, const Scene<T>& scene)
 	    }
 	}
     }
-  return Vec3<T>(10.0/nearest);
+  if(!obj) return Vec3<T>(0);
+  auto point_of_hit = ray.start + ray.dir * nearest;
+  auto normal = obj->normal(point_of_hit);
+
+  Vec3<T> color(0);
+  for(auto& l : scene.lights)
+    {
+      auto light_direction = (l -> position() - point_of_hit).normalized();
+      bool blocked = std::any_of(scene.objects.begin(), scene.objects.end(), [=](const Sphere<T>* o) {
+	  return o->intersect({point_of_hit + normal * 1e-5, light_direction});
+	});
+      if(!blocked)
+	color += (l -> color() * std::max(T(0), normal * light_direction)).mul(obj->color());
+
+    }
+  return color;
     //  return Vec3<T>(obj ? 1 : 0);
 }
 
@@ -86,20 +101,20 @@ void render(const Scene<T>& scene)
 	direction.normalize();
 
 	auto pixel = trace(Ray<T>(eye, direction), scene);
-
-	uchar r,g,b;
+	//	pixel.normalize();
+	int r,g,b;
 	r = pixel.getX() * 255 + 0.5;
 	g = pixel.getY() * 255 + 0.5;
 	b = pixel.getZ() * 255 + 0.5;
 
-	r = std::min(r,(uchar)255);
-	g = std::min(g,(uchar)255);
-	b = std::min(b,(uchar)255);
+	r = std::min(r,255);
+	g = std::min(g,255);
+	b = std::min(b,255);
 	int index = 3 * (y * width + x);
 
-	image[index] = b;
+	image[index] = r;
 	image[index + 1] = g;
-	image[index + 2] = r;
+	image[index + 2] = b;
 
 	
       }
