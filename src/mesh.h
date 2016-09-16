@@ -4,11 +4,12 @@
 #include <limits>
 #include <opencv2/opencv.hpp>
 #include <algorithm>
+const int max_depth = 5;
 template <typename T>
 class Sphere
 {
 public:
-  Sphere(const Vec3<T> &c, const T &r, const Vec3<T> &clr) : m_center(c), m_radius(r), m_color(clr)
+ Sphere(const Vec3<T> &c, const T &r, const Vec3<T> &clr, const T& refl = 0.0, const T& trans = 0.0) : m_center(c), m_radius(r), m_color(clr), m_reflection(refl), m_transparency(trans)
   {}
   Vec3<T> normal(const Vec3<T>& pos) const
   {
@@ -32,10 +33,14 @@ public:
     return true;
   }
   Vec3<T> color() const {return m_color;}
+  T reflection_ratio() const {return m_reflection;}
+  T transparency() const {return m_transparency;}
 protected:
   Vec3<T> m_center;
   T m_radius;
   Vec3<T> m_color;
+  T m_reflection;
+  T m_transparency;
 };
 
 template <typename T>
@@ -48,7 +53,7 @@ struct Scene
 
 
 template <typename T>
-Vec3<T> trace(const Ray<T>& ray, const Scene<T>& scene)
+Vec3<T> trace(const Ray<T>& ray, const Scene<T>& scene, int depth)
 {
   T nearest = std::numeric_limits<T>::max();
   const Sphere<T>* obj = NULL;
@@ -67,8 +72,15 @@ Vec3<T> trace(const Ray<T>& ray, const Scene<T>& scene)
   if(!obj) return Vec3<T>(0);
   auto point_of_hit = ray.start + ray.dir * nearest;
   auto normal = obj->normal(point_of_hit);
-
+  bool inside = false;
+  if(normal * ray.dir > 0)
+    {
+      inside = true;
+      normal = -normal;
+    }
   Vec3<T> color(0);
+
+  // compute diffuse 
   for(auto& l : scene.lights)
     {
       auto light_direction = (l -> position() - point_of_hit).normalized();
@@ -79,6 +91,33 @@ Vec3<T> trace(const Ray<T>& ray, const Scene<T>& scene)
 	color += (l -> color() * std::max(T(0), normal * light_direction)).mul(obj->color());
 
     }
+  // compute reflection
+  if(depth < max_depth && obj ->reflection_ratio() > 0)
+    {
+      auto reflection_direction = ray.dir + normal * 2 * (ray.dir * normal) * T(-1);
+      auto reflection = trace(Ray<T>(point_of_hit + normal * 1e-5, reflection_direction), scene, depth + 1);
+      color += reflection * obj -> reflection_ratio();
+    }
+
+  // refraction
+  if(depth < max_depth && obj -> transparency() > 0)
+    {
+      T ior = 1.5;
+      auto CE = ray.dir * normal * T(-1);
+      ior = inside?T(1)/ior:ior;
+      auto eta = T(1) / ior;
+      auto GF = (ray.dir + normal.mul(CE)) * eta;
+      auto sin_t1_2 = 1 - CE * CE;
+      auto sin_t2_2 = sin_t1_2 * (eta * eta);
+      if(sin_t2_2 < T(1))
+	{
+	  auto GC = normal * sqrt(1 - sin_t2_2);
+	  auto refraction_direction = GF - GC;
+	  auto refraction = trace(Ray<T>(point_of_hit - normal * 1e-4, refraction_direction), scene, depth + 1);
+	  color += refraction * obj -> transparency();
+	}
+    }
+  
   return color;
     //  return Vec3<T>(obj ? 1 : 0);
 }
@@ -100,8 +139,8 @@ void render(const Scene<T>& scene)
 			  -1.0f);
 	direction.normalize();
 
-	auto pixel = trace(Ray<T>(eye, direction), scene);
-	//	pixel.normalize();
+	auto pixel = trace(Ray<T>(eye, direction), scene, 0);
+
 	int r,g,b;
 	r = pixel.getX() * 255 + 0.5;
 	g = pixel.getY() * 255 + 0.5;

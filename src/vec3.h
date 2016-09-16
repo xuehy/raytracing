@@ -26,6 +26,10 @@ public:
     y += v.y;
     z += v.z;
   }
+  Vec3<T> operator-() const
+    {
+      return Vec3<T>(-x,-y,-z);
+    }
 };
 
 template <typename T>
